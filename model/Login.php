@@ -94,18 +94,16 @@ class Login
     /**
      * returns user's domain name
      * @param $username
-     * @return mixed|null
+     * @return string|null
      * @throws Exception
      */
-    protected function getUserDomain($username)
+    protected function getUserDomain(string $username)
     {
         $sql = "SELECT domain FROM {$this->table} WHERE username = :username AND active = :active";
 
-        $active = db_get_boolean(true);
-
         $values = [
             'username' => $username,
-            'active' => $active,
+            'active' => db_get_boolean(true),
         ];
 
         // Fetch the domain
@@ -114,7 +112,7 @@ class Login
         if (is_array($result) && isset($result['domain'])) {
             return $result['domain'];
         } else {
-            return NULL;
+            return null;
         }
     }
 
