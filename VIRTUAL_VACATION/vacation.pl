@@ -58,13 +58,20 @@ our $smtp_server = 'localhost';
 # port to connect to; defaults to 25 for non-SSL, 465 for 'ssl', 587 for 'starttls'
 our $smtp_server_port = 25;
 
-# this is the helo we [the vacation script] use on connection; you may need to change this to your hostname or something,
-# depending upon what smtp helo restrictions you have in place within Postfix.
+# this is the local address from which to connect
 our $smtp_client = 'localhost';
 
+# this is the helo we [the vacation script] use on connection; you may need to change this to your hostname or something,
+# depending upon what smtp helo restrictions you have in place within Postfix.
+our $smtp_helo = 'localhost.localdomain';
+
 # send mail encrypted or plaintext
-# if 'starttls', use STARTTLS; if 'ssl' (or 1), connect securely; otherwise, no security
-our $smtp_ssl = 'starttls';
+# if 1, connect securely via ssl
+# if 'starttls', connect using starttls (plaintext+neg tls)
+# if 'maybestarttls' - try starttls, otherwise plaintext.
+# if 0 (default), plain text, no security
+# See also : https://metacpan.org/pod/Email::Sender::Transport::SMTP
+our $smtp_ssl = 0;
 
 # maximum time in secs to wait for server; default is 120
 our $smtp_timeout = '120';
@@ -479,6 +486,7 @@ sub send_vacation_email {
             ssl  => $smtp_ssl,
             timeout => $smtp_timeout,
             localaddr => $smtp_client,
+            helo => $smtp_helo,
             debug => 0,
         };
 
@@ -492,10 +500,16 @@ sub send_vacation_email {
 
         $subject = Encode::encode_utf8($subject) if(Encode::is_utf8($subject));
         $body = Encode::encode_utf8($body) if(Encode::is_utf8($body));
+
+        my $email_from = $from;
+        if($friendly_from ne '') {
+            $email_from = encode_mimewords($friendly_from, 'Charset', 'UTF-8') . " $from <$from>";
+        }
+
         $email = Email::Simple->create(
             header => [
                 To      => $to,
-                From    => $from,
+                From    => $email_from,
                 Subject => encode_mimewords($subject, 'Charset', 'UTF-8'),
                 Precedence => 'junk',
                 'Content-Type' => "text/plain; charset=utf-8",

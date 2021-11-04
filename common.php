@@ -1,4 +1,7 @@
 <?php
+
+require_once(dirname(__FILE__) . '/vendor/autoload.php');
+
 /**
  * Postfix Admin
  *
@@ -27,27 +30,13 @@ if (!defined('POSTFIXADMIN')) {
         if (empty($_SESSION['flash'])) {
             $_SESSION['flash'] = array();
         }
+
+        // avoid clickjacking attacks?
+        header('X-Frame-Options: DENY');
     }
 }
 
 $incpath = dirname(__FILE__);
-
-/**
- * @param string $class
- * __autoload implementation, for use with spl_autoload_register().
- */
-function postfixadmin_autoload($class)
-{
-    $PATH = dirname(__FILE__) . '/model/' . $class . '.php';
-
-    if (is_file($PATH)) {
-        require_once($PATH);
-        return true;
-    }
-    return false;
-}
-
-spl_autoload_register('postfixadmin_autoload');
 
 if (!is_file("$incpath/config.inc.php")) {
     die("config.inc.php is missing!");
